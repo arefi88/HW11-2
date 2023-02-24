@@ -8,11 +8,13 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.example.geoquiz.databinding.FragmentCheatBinding
 
 class CheatFragment : Fragment(R.layout.fragment_cheat) {
     lateinit var binding : FragmentCheatBinding
     private val cheatViewModel:CheatViewModel by viewModels()
+    val args: CheatFragmentArgs by navArgs()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -25,12 +27,8 @@ class CheatFragment : Fragment(R.layout.fragment_cheat) {
         super.onViewCreated(view, savedInstanceState)
         binding= FragmentCheatBinding.bind(view)
         binding.viewModel=cheatViewModel
-        //init(view)
-//        cheatViewModel.answer.observe(viewLifecycleOwner){
-//           binding.txtAnswer.text=it.toString()
-//        }
-        val counter=arguments?.getInt("COUNTER")
-       binding.txtQuestion.text=arguments?.getString("QUESTION")
+        val counter=args.counter
+        binding.txtQuestion.text=args.question
         binding.btnAnswer.setOnClickListener {
             if (counter==0 || counter==2 || counter==4 || counter==5
                 ||counter==7 || counter==9){

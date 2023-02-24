@@ -4,17 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
+import androidx.navigation.Navigation
 import com.example.geoquiz.databinding.FragmentQuizBinding
 
 class QuizFragment : Fragment(R.layout.fragment_quiz) {
     lateinit var binding : FragmentQuizBinding
-    private val quizViewMode: QuizFragmentViewModel by viewModels()
+    private val quizFragmentViewModel: QuizFragmentViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -26,41 +24,51 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding= FragmentQuizBinding.bind(view)
-        binding.viewModel=quizViewMode
+        binding.viewModel=quizFragmentViewModel
         val question = Question()
         val list = question.getQuestions()
-        binding.txtQuestion.text = list[quizViewMode.counter.value!!]
-        //var counter = 0
-        //quizViewMode.counter.value=0
-        quizViewMode.counter.observe(viewLifecycleOwner){
+        binding.txtQuestion.text = list[quizFragmentViewModel.counter.value!!]
+
+        quizFragmentViewModel.counter.observe(viewLifecycleOwner){
             binding.txtQuestion.text = list[it]
         }
         binding.btnNext.setOnClickListener {
             binding.btnPrev.isEnabled = true
+            quizFragmentViewModel.isCheat.value=false
            // counter++
-            quizViewMode.counter.value= quizViewMode.counter.value!!.plus(1)
-            binding.btnNext.isEnabled = quizViewMode.counter.value != 9
-            binding.txtQuestion.text = list[quizViewMode.counter.value!!]
+            quizFragmentViewModel.counter.value= quizFragmentViewModel.counter.value!!.plus(1)
+            binding.btnNext.isEnabled = quizFragmentViewModel.counter.value != 9
+            binding.txtQuestion.text = list[quizFragmentViewModel.counter.value!!]
 
         }
         binding.btnPrev.setOnClickListener {
             binding.btnNext.isEnabled = true
-            //counter--
-            quizViewMode.counter.value= quizViewMode.counter.value!!.minus(1)
-            if (quizViewMode.counter.value!! < 0) {
+            quizFragmentViewModel.isCheat.value=false
+            quizFragmentViewModel.counter.value= quizFragmentViewModel.counter.value!!.minus(1)
+            if (quizFragmentViewModel.counter.value!! < 0) {
                 binding.btnPrev.isEnabled = false
-                quizViewMode.counter.value = 0
+                quizFragmentViewModel.counter.value = 0
                 return@setOnClickListener
             }
-            binding.btnPrev.isEnabled = quizViewMode.counter.value != 0
+            binding.btnPrev.isEnabled = quizFragmentViewModel.counter.value != 0
 
-            binding.txtQuestion.text = list[quizViewMode.counter.value!!]
+            binding.txtQuestion.text = list[quizFragmentViewModel.counter.value!!]
 
 
         }
+        quizFragmentViewModel.isCheat.observe(viewLifecycleOwner){
+            if (it){
+                binding.btnFalse.isEnabled=false
+                binding.btnTrue.isEnabled=false
+            }else{
+                binding.btnFalse.isEnabled=true
+                binding.btnTrue.isEnabled=true
+
+            }
+        }
         binding.btnTrue.setOnClickListener {
-            if (quizViewMode.counter.value!! == 0 || quizViewMode.counter.value!! == 2 || quizViewMode.counter.value!! == 4 || quizViewMode.counter.value!! == 5
-                || quizViewMode.counter.value!! == 7 || quizViewMode.counter.value!! == 9) {
+            if (quizFragmentViewModel.counter.value!! == 0 || quizFragmentViewModel.counter.value!! == 2 || quizFragmentViewModel.counter.value!! == 4 || quizFragmentViewModel.counter.value!! == 5
+                || quizFragmentViewModel.counter.value!! == 7 || quizFragmentViewModel.counter.value!! == 9) {
                 Toast.makeText(activity, "correct!", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(activity, "incorrect!", Toast.LENGTH_SHORT).show()
@@ -68,30 +76,25 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
 
         }
         binding.btnFalse.setOnClickListener {
-            if (quizViewMode.counter.value!! == 1 || quizViewMode.counter.value!! == 3 || quizViewMode.counter.value!! == 6 || quizViewMode.counter.value!! == 8) {
+            if (quizFragmentViewModel.counter.value!! == 1 || quizFragmentViewModel.counter.value!! == 3 || quizFragmentViewModel.counter.value!! == 6 || quizFragmentViewModel.counter.value!! == 8) {
                Toast.makeText(activity, "correct!", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(activity, "incorrect!", Toast.LENGTH_SHORT).show()
             }
         }
         binding.btnCheat.setOnClickListener {
-            activity?.supportFragmentManager?.commit {
-                val bundle = Bundle()
-                val fragment = CheatFragment()
-                bundle.putString("QUESTION", binding.txtQuestion.text.toString())
-                bundle.putInt("COUNTER", quizViewMode.counter.value!!)
-                fragment.arguments = bundle
-                setReorderingAllowed(true)
-                replace(R.id.container, fragment)
-                addToBackStack(null)
-            }
+
+            quizFragmentViewModel.isCheat.value=true
+            val action=QuizFragmentDirections.actionQuizFragmentToCheatFragment(quizFragmentViewModel.counter.value!!,
+                                                                                binding.txtQuestion.text.toString())
+            Navigation.findNavController(view).navigate(action)
         }
     }
 
     override fun onResume() {
-        if (quizViewMode.counter.value==0){
+        if (quizFragmentViewModel.counter.value==0){
             binding.btnPrev.isEnabled=false
-        }else if (quizViewMode.counter.value==9){
+        }else if (quizFragmentViewModel.counter.value==9){
             binding.btnNext.isEnabled=false
         }
         super.onResume()
